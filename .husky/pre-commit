@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+pnpm exec versioning check-secrets
+pnpm exec versioning validate
+
+if [ -f CHANGELOG.md ]; then
+  pnpm exec versioning check-changelog --allow-empty
+fi

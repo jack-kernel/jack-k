@@ -1,0 +1,37 @@
+{
+  "name": "jack-k",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "dev": "turbo run dev",
+    "format": "prettier --write .",
+    "prepare": "husky",
+    "release": "pnpm --filter @jack-k/release-tools build && node tooling/release/release.mjs",
+    "release:dry-run": "pnpm --filter @jack-k/release-tools build && node tooling/release/release.mjs --dry-run",
+    "version:patch": "versioning patch",
+    "version:minor": "versioning minor",
+    "version:major": "versioning major",
+    "version:release": "versioning release",
+    "version:changelog": "versioning changelog",
+    "version:sync": "versioning sync",
+    "version:validate": "versioning validate"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.2",
+    "@edcalderon/versioning": "^1.5.11",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

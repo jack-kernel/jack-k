@@ -1,0 +1,20 @@
+{
+  "name": "@jack-k/orchestrator",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@jack-k/core": "workspace:*",
+    "@jack-k/config": "workspace:*",
+    "@jack-k/executors": "workspace:*",
+    "@jack-k/git-worker": "workspace:*",
+    "@jack-k/telegram": "workspace:*",
+    "@jack-k/ticket-store": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --root ../.. apps/orchestrator/src",
+    "start": "node dist/index.js"
+  }
+}

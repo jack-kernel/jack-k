@@ -1,0 +1,23 @@
+{
+  "rootPackageJson": "package.json",
+  "packages": ["packages/*", "apps/*"],
+  "changelogFile": "CHANGELOG.md",
+  "conventionalCommits": true,
+  "syncDependencies": true,
+  "ignorePackages": ["tooling/*"],
+  "extensionConfig": {
+    "secrets-check": {
+      "allowlist": [
+        "TELEGRAM_BOT_TOKEN: z.string().min(1)",
+        "TELEGRAM_SECRET_TOKEN: z.string().min(1)",
+        "GITHUB_WEBHOOK_SECRET: z.string().min(1)"
+      ]
+    }
+  },
+  "releaseGuard": {
+    "enabled": true,
+    "tagPrefix": "v",
+    "allowBuildMetadata": true,
+    "checkReleaseFloor": true
+  }
+}

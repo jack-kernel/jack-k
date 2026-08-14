@@ -52,6 +52,20 @@ describe("Supervisor", () => {
     expect(gitWorker.openDraftPr).toHaveBeenCalledOnce();
   });
 
+  it("does not process PR approvals in analysis mode", async () => {
+    const { store, executor, gitWorker } = setup();
+    const supervisor = new Supervisor({ store, executor, gitWorker, repos: [{ name: "acme/app", url: "https://github.com/acme/app.git", defaultBranch: "main", authority: AuthorityLevel.L6, forbiddenPaths: [] }], mode: "analysis", notify: vi.fn(async () => undefined) });
+    await supervisor.pollOnce();
+    store.recordApproval("ticket-1", "open_draft_pr", "42");
+
+    await supervisor.processApprovals();
+
+    expect(store.getTicket("ticket-1")?.state).toBe("awaiting_approval");
+    expect(gitWorker.commit).not.toHaveBeenCalled();
+    expect(gitWorker.push).not.toHaveBeenCalled();
+    expect(gitWorker.openDraftPr).not.toHaveBeenCalled();
+  });
+
   it("fails and cleans up tickets left executing after a crash", async () => {
     const { store, gitWorker } = setup();
     store.transition("ticket-1", "triaging");

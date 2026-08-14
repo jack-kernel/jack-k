@@ -38,6 +38,7 @@ export class Supervisor {
   }
 
   public async processApprovals(): Promise<void> {
+    if (this.options.mode !== "draft-pr") return;
     for (const ticket of this.options.store.listTickets({ state: "awaiting_approval" })) {
       if (this.options.store.hasApproval(ticket.id, "reject") || this.options.store.hasApproval(ticket.id, "request_changes")) {
         this.options.store.transition(ticket.id, "rejected", "Approval rejected or changes requested");

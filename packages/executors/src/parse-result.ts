@@ -8,19 +8,32 @@ interface StructuredOutput {
   files_changed?: string[];
 }
 
+const redactTranscript = (value: string): string =>
+  value
+    .replace(/\bgh[pousr]_[A-Za-z0-9]{36}\b/g, "[REDACTED]")
+    .replace(/\bsk-(?:proj-)?[A-Za-z0-9_-]+\b/g, "[REDACTED]");
+
 export const parseExecutorResult = (stdout: string, stderr: string, context: ExecutorContext): ExecutorResult => {
+  const sanitizedStdout = redactTranscript(stdout);
+  const transcriptArtifact = `Executor output omitted (${stdout.length + stderr.length} bytes).`;
+
   try {
-    const parsed = JSON.parse(stdout) as StructuredOutput;
+    const parsed = JSON.parse(sanitizedStdout) as StructuredOutput;
     return {
       ok: true,
-      summary: parsed.result ?? parsed.summary ?? "",
+      summary: redactTranscript(parsed.result ?? parsed.summary ?? ""),
       filesChanged: parsed.files_changed ?? [],
       ...(parsed.session_id ? { sessionId: parsed.session_id } : {}),
       ...(parsed.cost_usd !== undefined ? { costUsd: parsed.cost_usd } : {}),
-      transcript: stdout,
+      transcript: transcriptArtifact,
     };
   } catch {
-    return { ok: true, summary: stdout.trim(), filesChanged: [], transcript: stderr ? `${stdout}\n${stderr}` : stdout };
+    return {
+      ok: true,
+      summary: sanitizedStdout.trim(),
+      filesChanged: [],
+      transcript: transcriptArtifact,
+    };
   }
 };
 

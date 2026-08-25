@@ -7,13 +7,17 @@ import { TicketStore } from "./store.js";
 
 const roots: string[] = [];
 afterEach(() => {
-  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  for (const root of roots.splice(0))
+    rmSync(root, { recursive: true, force: true });
 });
 
 const makeStore = () => {
   const root = mkdtempSync(join(tmpdir(), "jack-k-store-"));
   roots.push(root);
-  return new TicketStore({ dbPath: join(root, "tickets.db"), eventDir: join(root, "events") });
+  return new TicketStore({
+    dbPath: join(root, "tickets.db"),
+    eventDir: join(root, "events"),
+  });
 };
 
 const ticket = (repo: string = "acme/app") => ({
@@ -33,8 +37,16 @@ describe("TicketStore", () => {
 
     expect(store.getTicket("ticket-1")?.state).toBe("planned");
     const events = store.streamEvents(0);
-    expect(events.map((event) => event.event.type)).toEqual(["ticket_created", "ticket_transitioned", "ticket_transitioned"]);
-    expect(readFileSync(events[0]?.filePath ?? "", "utf8").split("\n").filter(Boolean)).toHaveLength(3);
+    expect(events.map((event) => event.event.type)).toEqual([
+      "ticket_created",
+      "ticket_transitioned",
+      "ticket_transitioned",
+    ]);
+    expect(
+      readFileSync(events[0]?.filePath ?? "", "utf8")
+        .split("\n")
+        .filter(Boolean),
+    ).toHaveLength(3);
   });
 
   it("rejects illegal transitions", () => {
@@ -67,5 +79,31 @@ describe("TicketStore", () => {
     expect(store.hasApproval("ticket-1", "open_draft_pr")).toBe(false);
     store.recordApproval("ticket-1", "open_draft_pr", "telegram-user-1");
     expect(store.hasApproval("ticket-1", "open_draft_pr")).toBe(true);
+  });
+
+  it("persists completed executor output and rebuilds it from the audit log", () => {
+    const store = makeStore();
+    store.createTicket(ticket());
+    const result = {
+      ok: true,
+      summary: "Done",
+      filesChanged: ["src/parser.ts"],
+      transcript: "verified",
+    };
+    const persistedResult = {
+      ...result,
+      transcript: "Executor output redacted before persistence.",
+    };
+    store.recordCompletedExecution("ticket-1", "forge/ticket-1", result);
+
+    expect(store.getCompletedExecution("ticket-1")).toMatchObject({
+      branch: "forge/ticket-1",
+      result: persistedResult,
+    });
+    store.rebuild();
+    expect(store.getCompletedExecution("ticket-1")).toMatchObject({
+      branch: "forge/ticket-1",
+      result: persistedResult,
+    });
   });
 });

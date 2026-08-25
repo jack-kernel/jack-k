@@ -90,16 +90,20 @@ describe("TicketStore", () => {
       filesChanged: ["src/parser.ts"],
       transcript: "verified",
     };
+    const persistedResult = {
+      ...result,
+      transcript: "Executor output redacted before persistence.",
+    };
     store.recordCompletedExecution("ticket-1", "forge/ticket-1", result);
 
     expect(store.getCompletedExecution("ticket-1")).toMatchObject({
       branch: "forge/ticket-1",
-      result,
+      result: persistedResult,
     });
     store.rebuild();
     expect(store.getCompletedExecution("ticket-1")).toMatchObject({
       branch: "forge/ticket-1",
-      result,
+      result: persistedResult,
     });
   });
 });

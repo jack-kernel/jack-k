@@ -93,6 +93,14 @@ export class Supervisor {
     for (const ticket of this.options.store.listTickets({
       state: "executing",
     })) {
+      if (this.options.store.getCompletedExecution(ticket.id)) {
+        this.options.store.transition(
+          ticket.id,
+          "awaiting_approval",
+          "Recovered completed executor execution",
+        );
+        continue;
+      }
       try {
         await this.options.gitWorker.cleanup(ticket.id);
       } finally {

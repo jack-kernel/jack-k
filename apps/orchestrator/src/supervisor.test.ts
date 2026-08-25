@@ -190,4 +190,32 @@ describe("Supervisor", () => {
     expect(store.getTicket("ticket-1")?.state).toBe("failed");
     expect(gitWorker.cleanup).toHaveBeenCalledWith("ticket-1");
   });
+
+  it("recovers a durably completed execution into awaiting approval without cleanup", async () => {
+    const { store, gitWorker } = setup();
+    store.transition("ticket-1", "triaging");
+    store.transition("ticket-1", "planned");
+    store.transition("ticket-1", "executing");
+    const result: ExecutorResult = {
+      ok: true,
+      summary: "Implemented parser fix",
+      filesChanged: ["src/parser.ts"],
+      transcript: "sanitized transcript",
+    };
+    store.recordCompletedExecution("ticket-1", "forge/ticket-1-fix-parser", result);
+    const supervisor = new Supervisor({ store, executor: {} as Executor, gitWorker, repos: [{ name: "acme/app", url: "https://github.com/acme/app.git", defaultBranch: "main", authority: AuthorityLevel.L6, forbiddenPaths: [] }], mode: "draft-pr", notify: vi.fn(async () => undefined) });
+
+    await supervisor.recoverOnBoot();
+
+    expect(store.getTicket("ticket-1")?.state).toBe("awaiting_approval");
+    expect(gitWorker.cleanup).not.toHaveBeenCalled();
+
+    store.recordApproval("ticket-1", "open_draft_pr", "42");
+    await supervisor.processApprovals();
+
+    expect(store.getTicket("ticket-1")?.state).toBe("pr_open");
+    expect(gitWorker.commit).toHaveBeenCalledOnce();
+    expect(gitWorker.push).toHaveBeenCalledOnce();
+    expect(gitWorker.openDraftPr).toHaveBeenCalledOnce();
+  });
 });

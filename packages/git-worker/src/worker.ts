@@ -37,6 +37,7 @@ export class GitWorker {
     const { ticket, repo } = this.authorize(ticketId, AuthorityLevel.L2, "commit");
     const worktree = this.worktreeFor(ticket);
     const changed = await this.run("git", ["-C", worktree, "diff", "--name-only"]);
+    if (!changed.stdout.trim()) return;
     const forbidden = changed.stdout.split(/\r?\n/).map((path) => path.trim()).filter(Boolean).find((path) => repo.forbiddenPaths.some((pattern) => matchesForbidden(pattern, path)));
     if (forbidden) throw new Error(`Commit blocked by forbidden path: ${forbidden}`);
     await this.run("git", ["-C", worktree, "add", "--all"]);
@@ -51,6 +52,10 @@ export class GitWorker {
   public async openDraftPr(ticketId: string, body: string): Promise<string> {
     const { ticket, repo } = this.authorize(ticketId, AuthorityLevel.L3, "open_draft_pr");
     if (!this.store.hasApproval(ticketId, "open_draft_pr")) throw new Error("Telegram approval required before opening a draft PR");
+    const existing = await this.run("gh", [
+      "pr", "list", "--repo", repo.name, "--head", this.branchFor(ticket), "--state", "all", "--json", "url", "--jq", ".[0].url",
+    ]);
+    if (existing.stdout.trim()) return existing.stdout.trim();
     const result = await this.run("gh", [
       "pr", "create", "--draft", "--repo", repo.name, "--title", `Forge: ${ticket.description.slice(0, 80)}`,
       "--body-file", "-", "--head", this.branchFor(ticket), "--base", repo.defaultBranch,

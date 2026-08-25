@@ -76,6 +76,18 @@ interface TicketRow {
   claimed_at: string | null;
 }
 
+interface CompletedExecutionRow {
+  ticket_id: string;
+  result_json: string;
+  branch: string;
+}
+
+export interface CompletedExecution {
+  ticketId: string;
+  result: ExecutorResult;
+  branch: string;
+}
+
 const now = (): string => new Date().toISOString();
 
 export class TicketStore {
@@ -306,7 +318,12 @@ export class TicketStore {
     branch: string,
     result: ExecutorResult,
   ): CompletedExecution {
-    const execution = { ticketId, branch, result, completedAt: now() };
+    const execution = {
+      ticketId,
+      branch,
+      result: { ...result, transcript: "Executor output redacted before persistence." },
+      completedAt: now(),
+    };
     this.append({ type: "execution_completed", execution });
     this.projectCompletedExecution(execution);
     return execution;

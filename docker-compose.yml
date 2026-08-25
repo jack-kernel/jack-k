@@ -1,0 +1,35 @@
+name: jack-k-local
+services:
+  gateway:
+    build: .
+    command: ["pnpm", "--filter", "@jack-k/gateway", "start"]
+    env_file: .env.example
+    environment:
+      PORT: "8787"
+      HOST: "0.0.0.0"
+    volumes:
+      - jack-data:/data
+    ports:
+      - "127.0.0.1:8787:8787"
+    restart: unless-stopped
+  orchestrator:
+    build: .
+    command: ["pnpm", "--filter", "@jack-k/orchestrator", "start"]
+    env_file: .env.example
+    volumes:
+      - jack-data:/data
+    restart: unless-stopped
+  postgres:
+    image: postgres:16-alpine
+    env_file: .env.example
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+volumes:
+  jack-data:
+  postgres-data:

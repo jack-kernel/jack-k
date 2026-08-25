@@ -1,5 +1,11 @@
 # JACK-K
 
+> **v0.2 is under development.** The current release is **v0.1.2**. The v0.2
+> work is being delivered phase-by-phase; the existing SQLite runtime remains
+> the supported baseline until the Postgres migration is complete. See the
+> [architecture](docs/architecture.md), [security model](docs/security-model.md),
+> and [deployment guide](docs/deployment.md).
+
 JACK-K is a self-hosted repository agent platform.
 
 Its job is simple to state and deliberately hard to misuse: receive a piece
@@ -224,12 +230,12 @@ pnpm release:dry-run 0.1.2
 pnpm release 0.1.2
 ```
 
-## 📋 Latest Changes (v0.1.1)
+## 📋 Latest Changes (v0.1.2)
 
 - Analysis mode now records approvals without allowing them to trigger Git
   mutations.
 
-The current release is **v0.1.1**. See [CHANGELOG.md](./CHANGELOG.md) for the
+The current release is **v0.1.2**. See [CHANGELOG.md](./CHANGELOG.md) for the
 version history and [GitHub releases](https://github.com/jack-kernel/jack-k/releases)
 for published artifacts.
 

@@ -15,12 +15,16 @@ The gateway is bound to `127.0.0.1`; Postgres is not published. This
 Phase 0 composition validates packaging but the application still uses SQLite
 until Phase 1 lands.
 
-Production starts on one 8 GB VM with one concurrent worker. Run gateway,
-orchestrator, and Postgres as separate services. Do not expose the application
-port publicly. Do not run agents inside gateway/orchestrator: the orchestrator
-must provision ephemeral workers. Use a dedicated non-root service account,
-key-only SSH, a default-deny firewall, automatic security updates, and a
-separate encrypted backup destination.
+The first NixOS deployment runs as a headless libvirt/QEMU guest on the Linux
+host, with one concurrent worker. Run gateway, orchestrator, and Postgres as
+separate hardened services. Do not expose the application port publicly. Do not
+run agents inside gateway/orchestrator: the orchestrator must provision an
+ephemeral per-ticket worker. Host exports are allowlisted and must never include
+the host home, root filesystem, Docker/libvirt sockets, or general credential
+stores. Persistent state is outside the Nix store and has a separate encrypted
+backup destination. The normative build, mount, identity, secret, rollback, and
+recovery requirements are in the
+[NixOS runtime baseline](specs/nixos-runtime-baseline.md).
 
 ## Subscription-backed coding tools
 
